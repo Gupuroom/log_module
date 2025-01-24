@@ -28,7 +28,7 @@
             <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [ %thread] %logger{36} : %msg%n</pattern>
         </encoder>
 
-        <filter class="com.log_module.logging.filter.APILogFilter"/>
+        <filter class="com.log_module.logging.filter.ApiLogFilter"/>
     </appender>
 
     <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -40,7 +40,7 @@
         <encoder>
             <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [ %thread] %logger{36} : %msg%n</pattern>
         </encoder>
-        <filter class="com.log_module.logging.filter.ERRORLogFilter"/>
+        <filter class="com.log_module.logging.filter.ErrorLogFilter"/>
     </appender>
 
     <!-- #Profile은 Root application.yml 에 의존한다. -->

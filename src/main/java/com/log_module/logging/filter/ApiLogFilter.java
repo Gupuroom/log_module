@@ -9,7 +9,7 @@ import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 @Component
-public class APILogFilter extends Filter<LoggingEvent> {
+public class ApiLogFilter extends Filter<LoggingEvent> {
 
     @Override
     public FilterReply decide(LoggingEvent event) {
