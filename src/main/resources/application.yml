@@ -1,0 +1,8 @@
+# Root .yml 에 의존한다.
+#spring:
+#  profiles:
+#    active: real
+
+config:
+  log-dir: logs
+  max-history: 30

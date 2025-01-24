@@ -1,0 +1,59 @@
+<configuration>
+    <!-- application.yml -->
+    <springProperty name="LOG_DIR" source="config.log-dir" defaultValue="logs"/>
+    <springProperty name="MAX_HISTORY" source="config.max-history" defaultValue="30"/>
+
+    <!-- Spring Boot Default Config -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+
+    <appender name="CONSOLE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/console.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/console.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [ %thread] %logger{36} : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="API_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/api.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/api.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [ %thread] %logger{36} : %msg%n</pattern>
+        </encoder>
+
+        <filter class="com.log_module.logging.filter.APILogFilter"/>
+    </appender>
+
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/error.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [ %thread] %logger{36} : %msg%n</pattern>
+        </encoder>
+        <filter class="com.log_module.logging.filter.ERRORLogFilter"/>
+    </appender>
+
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="dev,real">
+        <root level="INFO">
+            <appender-ref ref="ERROR_FILE"/>
+            <appender-ref ref="API_FILE"/>
+            <appender-ref ref="CONSOLE_FILE"/> <!-- CONSOLE FILE 로 저장 (max-history: 7일) -->
+        </root>
+    </springProfile>
+</configuration>
