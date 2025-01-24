@@ -1,153 +1,99 @@
-# log_module README
+# LOG_MODULE
 
-## 1. Submodule 설정
-- 이 모듈은 **단독으로 동작하지 않습니다**. 반드시 메인 프로젝트에 **submodule**로 추가하여 사용해야 합니다.
-- 해당 로그 모듈은 Spring Boot 환경에서의 로그 관리 및 설정을 간소화하는 용도로 사용됩니다. 외부 프로젝트에서 쉽게 재사용 가능하도록 설계되었습니다.
+## 1️⃣ 프로젝트 소개
 
-### Submodule 추가 방법
-```bash
-git submodule add https://github.com/Gupuroom/log_module.git ./log_module
-```
+`log_module`은 **Spring Boot** 기반 프로젝트의 로그 관리를 간소화하고, **환경별 설정**, **일관된 로그 관리**, 그리고 **유지보수성 향상**을 목표로 설계된 모듈입니다.
 
-## 2. 모듈 구조
+이 모듈은 다음과 같은 문제를 해결하는 데 초점을 맞춥니다:
 
-`log_module`은 최소한의 의존성으로 구성되어 있으며, 다른 프로젝트에서도 유연하게 사용될 수 있도록 설계되었습니다.
+- 환경에 따른 로그 관리의 복잡성 해소
+- API 호출 추적 및 디버깅 편의성 증대
+- 초기 프로젝트 설정 효율성 강화
 
-### 기본 패키지 구조
+## 2️⃣ 특징
+
+`log_module`은 다양한 환경과 요구 사항에 맞춰 유연하게 설계된 모듈로, 다음과 같은 주요 특징을 제공합니다:
+
+### 1. **환경별 설정**
+- local, dev, real 환경에 따라 로그 출력
+  - **local**: `Console` 출력
+  - **dev/real**: `Api` 로그, `Error` 로그, `Console` 로그를 각각 별도의 파일로 분리 기록
+
+### 2. **Error 및 Api 로그 관리**
+- Error 로그와 Api 로그를 분리하여 저장
+  - Error 로그는 별도 파일에 기록하여 디버깅과 문제 추적이 용이
+  - API 로그는 `traceId`를 포함해 호출 흐름을 명확히 추적 가능
+
+### 3. **효율적인 로그 파일 관리**
+- 로그 파일을 **일별로 분리**하고, 자동으로 압축 및 보관일 설정
+- 기본적으로 **30일**간 보관하며, yml 파일에서 보관 기간 변경 가능
+
+### 4. **최소한의 의존성**
+- Spring Boot 프로젝트에서 별도의 복잡한 설정 없이 손쉽게 적용 가능
+- 단순한 구조로 설계되어, 다른 프로젝트에서도 재사용 가능
+
+### 5. **추적 가능한 API 호출**
+- 각 API 호출 시 `traceId`를 기록하여 디버깅 및 에러 발생 시 관련 로그 검색 용이
+- 에러 발생 시 `traceId`를 통해 연관된 로그 추적
+
+### 6. **테스트 지원**
+- 기본적으로 제공되는 테스트 컨트롤러와 예외 코드를 통해, 모듈 테스트 및 검증이 용이
+
+
+이 모듈은 단순히 로그를 기록하는 기능뿐 아니라, 개발 및 운영 환경에서 로그 관리를 체계적으로 할 수 있도록 설계되었습니다.
+
+## 4️⃣ 패키지 구조
+
+`log_module`은 다음과 같은 패키지 구조입니다:
+
 ```bash
 com.log_module
 │
 ├── config
-│   └── WebConfig
+│   └── WebConfig                # Spring Boot 설정 클래스
 │
 ├── exception
-│   ├── CommonException
-│   ├── CommonExceptionCode
-│   ├── CommonExceptionHandler
-│   └── CommonExceptionResponse
+│   ├── CommonException          # 공통 예외 처리 클래스
+│   ├── CommonExceptionCode      # 예외 코드 정의
+│   ├── CommonExceptionHandler   # 예외 처리 핸들러
+│   └── CommonExceptionResponse  # 예외 응답 클래스
 │
 ├── logging
 │   ├── filter
-│   │   ├── ApiLogFilter
-│   │   └── ErrorLogFilter
+│   │   ├── ApiLogFilter         # API 로그 필터
+│   │   └── ErrorLogFilter       # ERROR 로그 필터
 │   ├── interceptor
-│   │   └── LogInterceptor
+│   │   └── LogInterceptor      # 로그 인터셉터
 │   ├── type
-│   │   └── MDCKey
+│   │   └── MDCKey              # MDC Key 정의
 │   └── wrapper
-│       └── CustomHttpRequestWrapper
-│       └── CustomHttpResponseWrapper
+│       └── CustomHttpRequestWrapper  # 커스텀 HTTP 요청 래퍼
+│       └── CustomHttpResponseWrapper # 커스텀 HTTP 응답 래퍼
 │
 └── test
     ├── controller
-    │   └── TestController
+    │   └── TestController       # 테스트용 컨트롤러
     └── type
-        └── TestExceptionCode
-
-resources
-│
-├── application.yml
-└── logback-spring.xml
-
+        └── TestExceptionCode    # 테스트용 예외 코드
 ```
 
+## 5️⃣ 환경 설정
 
-### 의도한 바
-
-이 모듈의 주된 목적은 **로그의 일관성 유지**, **재사용성 높이기**, **유지보수 용이성**을 기반으로 한 로그 시스템을 구축하는 것입니다.
-
-- **유연성**: 다양한 환경 (Local, Dev, Real)에서 환경에 맞는 로그 기록 방식을 지원합니다.
-- **유지보수성**: 코드의 변경 없이 로그 관리만으로 환경에 맞게 로그를 기록할 수 있습니다.
-
-## 3. 로그 기록 정책
-1. **실서버**
-    - 기본적으로 **Response Log**만 기록하고, **에러 발생 시**에만 Request Log를 추가로 기록하여 로그 파일 크기를 최소화합니다.
-
-2. **환경별 설정**
-    - **Local**: 로그를 Console에 출력
-    - **Dev/Real**: APILOG, ERRORLOG, CONSOLELOG를 별도의 파일로 저장
-
-## 4. 주요 기능
-
-### 4.1 API, Error 분리 기록
-- **문제점**: Console로 찍을 시 특정 로그를 찾기 어려운 점을 개선하기 위해 ERROR 로그만 별도로 기록하도록 설계하였습니다.
-- **해결방안**: Error 로그는 파일로 저장되며, Error 로그만을 기록하여 에러 발생 시 빠르게 로그를 분석할 수 있습니다.
-
-logback-spring.xml
-```java
-    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-<file>${LOG_DIR}/error.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-<fileNamePattern>${LOG_DIR}/error.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
-<maxHistory>${MAX_HISTORY}</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level --- [ %thread] %logger{36} : %msg%n</pattern>
-        </encoder>
-        <filter class="com.log_module.logging.filter.ErrorLogFilter"/>
-    </appender>
-```
-ErrorLogFilter.java
-```java
-@Component
-public class ErrorLogFilter extends Filter<LoggingEvent> {
-
-    @Override
-    public FilterReply decide(LoggingEvent event) {
-        Level level = event.getLevel();
-        if (level == Level.ERROR) {
-            return FilterReply.ACCEPT;
-        }
-
-        return FilterReply.DENY;
-    }
-}
-```
-### 4.2 API 별 검색 기능 (traceId 추가)
-- **문제점**: 기존 timestamp 로그 검색은 번거로웠습니다.
-- **해결방안**: `traceId`를 추가하여 API 별로 쉽게 검색할 수 있도록 했습니다.
-
-CommonExceptionHandler.java
-```java
-@ExceptionHandler(CommonException.class)
-public ResponseEntity<CommonExceptionResponse> handleCustomException(CommonException exception) {
-    CommonExceptionCode errorCode = exception.getErrorCode();
-    CommonExceptionResponse errorResponse = CommonExceptionResponse.of(errorCode);
-
-    errorLogMDCRequestDetails();
-    log.error("Common exception occurred: code: {}, message: {}", errorCode.getCode(), errorCode.getMessage(), exception);
-    return ResponseEntity.badRequest().body(errorResponse);
-}
-```
-CommonExceptionResponse.java
-```java
-@Getter
-@Builder
-public class CommonExceptionResponse {
-    private String code;
-    private String message;
-    private String traceId;
-    private LocalDateTime timestamp;
-
-    public static CommonExceptionResponse of(CommonExceptionCode errorCode) {
-        String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
-        return CommonExceptionResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .traceId(traceId)
-                .timestamp(LocalDateTime.now())
-                .build();
-    }
-}
-```
-
-### 4.3 로그 파일 일별 분리, 압축, 보관일 지정
-- **문제점**: 기존 WAR + Tomcat 환경에서는 로그 설정이 제한적이고, 일별 분리와 압축이 복잡했습니다.
-- **해결방안**: JAR 환경에서 **로그 파일 자동 분리**, **압축**, **보관일 설정**을 지원합니다. 기본 보관일은 **30일**이며, 설정 파일(`application.yml`)을 통해 쉽게 변경할 수 있습니다.
-
-#### 설정 예시
+### application.yml 설정
+- 로그 파일 경로 및 보관일 설정.
 ```yaml
 config:
-  log-dir: logs        # 로그 저장 경로
-  max-history: 30      # 로그 보관일 (기본값: 30일)
+  log-dir: logs   # 로그 파일 저장 경로
+  max-history: 30  # 로그 보관일 (기본 30일)
+```
+
+### Spring Profiles 설정
+
+Root 프로젝트에서 사용할 환경을 지정해야 합니다. 예를 들어 local, dev, real 환경을 설정하려면 아래와 같이 활성화할 수 있습니다.
+
+**지정안 할 시 로그가 호출되지 않습니다.**
+```yaml
+spring:
+  profiles:
+    active: local or dev or real  # 사용할 환경 설정
 ```
