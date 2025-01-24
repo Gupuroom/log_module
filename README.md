@@ -10,6 +10,8 @@
 - API 호출 추적 및 디버깅 편의성 증대
 - 초기 프로젝트 설정 효율성 강화
 
+---
+
 ## 2️⃣ 특징
 
 `log_module`은 다양한 환경과 요구 사항에 맞춰 유연하게 설계된 모듈로, 다음과 같은 주요 특징을 제공합니다:
@@ -41,6 +43,74 @@
 
 
 이 모듈은 단순히 로그를 기록하는 기능뿐 아니라, 개발 및 운영 환경에서 로그 관리를 체계적으로 할 수 있도록 설계되었습니다.
+
+---
+
+## 3️⃣설정 방법
+
+### 1. 서브모듈 설정
+서브모듈은 다른 Git 저장소를 현재 프로젝트에 종속적으로 포함시키는 방법입니다.  
+**`log_module`**을 서브모듈로 설정하려면 아래 과정을 따릅니다.
+
+```bash
+git submodule add https://github.com/Gupuroom/log_module.git log_module
+git submodule init
+git submodule update
+```
+
+>💡 참고:
+다른 개발자가 이 프로젝트를 클론하면, 서브모듈 데이터가 포함되지 않을 수 있으니 아래 명령어를 실행해야 합니다.
+```bash
+git clone <repository_url> git submodule update --init --recursive
+```
+
+### 2. 멀티모듈 설정
+멀티모듈 설정은 하나의 프로젝트가 아닌 여러 Module을 모아 구성한 프로젝트 구조를 말합니다.
+
+여기서는 `log_module`을 Root 프로젝트에 모듈로서 포함하여, 의존성을 관리하고 log_module의 기능을 Root 프로젝트에서 활용할 수 있도록 설정하는 방법을 설명합니다.
+
+#### 1. settings.gradle 설정 추가
+log_module을 프로젝트에 포함:
+
+```gardle
+include ':log_module'
+```
+
+#### Root 프로젝트 build.gradle 설정 추가
+```gradle
+allprojects {
+    repositories {
+        mavenCentral()  // 모든 모에서 Maven Central을 사용할 수 있게 설정
+    }
+}
+
+dependencies {
+    ...
+    implementation project(':log_module') // log_module을 의존성에 추가
+    ...
+}
+
+subprojects {
+    apply plugin: 'java'  // Java 플러그인을 모든 서브모듈에 적용
+    apply plugin: 'org.springframework.boot'  // Spring Boot 플러그인을 서브모듈에 적용
+    apply plugin: 'io.spring.dependency-management'  // 의존성 관리를 위한 플러그인 적용
+}
+
+```
+
+#### @SpringBootApplication 설정
+멀티모듈 프로젝트에서는 @SpringBootApplication에서 각 모듈의 패키지를 스캔해야 합니다.
+
+루트 프로젝트의 @SpringBootApplication을 아래와 같이 scanBasePackages를 정합니다:
+```java
+@SpringBootApplication(scanBasePackages = {"com.example", "com.log_module"})
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+```
+
+---
 
 ## 4️⃣ 패키지 구조
 
@@ -76,6 +146,8 @@ com.log_module
     └── type
         └── TestExceptionCode    # 테스트용 예외 코드
 ```
+
+---
 
 ## 5️⃣ 환경 설정
 
