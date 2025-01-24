@@ -1,4 +1,4 @@
-# Root .yml 에 의존한다.
+# Root application.yml 에 의존한다.
 #spring:
 #  profiles:
 #    active: real
