@@ -7,7 +7,7 @@ import ch.qos.logback.core.spi.FilterReply;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ERRORLogFilter extends Filter<LoggingEvent> {
+public class ErrorLogFilter extends Filter<LoggingEvent> {
 
     @Override
     public FilterReply decide(LoggingEvent event) {
