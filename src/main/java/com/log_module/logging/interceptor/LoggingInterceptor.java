@@ -70,15 +70,24 @@ public class LoggingInterceptor implements HandlerInterceptor {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     Object json = mapper.readValue(responseString, Object.class);
+                    String formattedResponse = mapper.writeValueAsString(json);
 
-                    return mapper.writeValueAsString(json);
+                    // 글자수 제한 처리
+                    return truncateIfExceedsLimit(formattedResponse, 200);
                 } catch (JsonProcessingException e) {
-                    return responseString;
+                    return truncateIfExceedsLimit(responseString, 200);
                 }
             }
         }
 
         return null;
+    }
+
+    private String truncateIfExceedsLimit(String input, int limit) {
+        if (input.length() > limit) {
+            return input.substring(0, limit) + "...";
+        }
+        return input;
     }
 
     private void putRequestParamsToMDC(HttpServletRequest request) {
