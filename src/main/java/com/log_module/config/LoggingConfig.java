@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @RequiredArgsConstructor
-public class WebConfig implements WebMvcConfigurer {
+public class LoggingConfig implements WebMvcConfigurer {
     private final LoggingInterceptor loggingInterceptor;  // Interceptor 생성자 주입
 
     @Override
