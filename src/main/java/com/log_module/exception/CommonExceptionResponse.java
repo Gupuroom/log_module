@@ -15,7 +15,7 @@ public class CommonExceptionResponse {
     private String traceId;
     private LocalDateTime timestamp;
 
-    public static CommonExceptionResponse of(CommonExceptionCode errorCode) {
+    public static CommonExceptionResponse of(CommonErrorCode errorCode) {
         String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
         return CommonExceptionResponse.builder()
                 .code(errorCode.getCode())

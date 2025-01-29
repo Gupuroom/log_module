@@ -1,6 +1,6 @@
 package com.log_module.exception;
 
-public interface CommonExceptionCode {
+public interface CommonErrorCode {
     String getCode();
     String getMessage();
 }

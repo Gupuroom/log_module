@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public class CommonException extends RuntimeException {
-    private final CommonExceptionCode errorCode;
+    private final CommonErrorCode errorCode;
 
-    public CommonException(CommonExceptionCode errorCode) {
+    public CommonException(CommonErrorCode errorCode) {
         this.errorCode = errorCode;
     }
 }

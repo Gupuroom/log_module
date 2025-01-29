@@ -15,7 +15,7 @@ public class CommonExceptionHandler {
 
     @ExceptionHandler(CommonException.class)
     public ResponseEntity<CommonExceptionResponse> handleCustomException(CommonException exception) {
-        CommonExceptionCode errorCode = exception.getErrorCode();
+        CommonErrorCode errorCode = exception.getErrorCode();
         CommonExceptionResponse errorResponse = CommonExceptionResponse.of(errorCode);
 
         errorLogMDCRequestDetails();

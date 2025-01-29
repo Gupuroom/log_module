@@ -1,12 +1,12 @@
 package com.log_module.test.type;
 
-import com.log_module.exception.CommonExceptionCode;
+import com.log_module.exception.CommonErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum TestExceptionCode implements CommonExceptionCode {
+public enum TestExceptionCode implements CommonErrorCode {
     SUCCESS("200","SUCCESS"),
     GET_TEST_ERROR("301","GET_TEST_ERROR"),
     POST_TEST_ERROR("302","POST_TEST_ERROR"),
