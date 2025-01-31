@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -32,12 +33,13 @@ public class LoggingInterceptor implements HandlerInterceptor {
         MDC.put(MDCKey.REQUEST_URI.getKey(), request.getRequestURI());
         MDC.put(MDCKey.METHOD.getKey(), request.getMethod());
 
-        if(request.getMethod().equals("GET")) {
+        HttpMethod method = HttpMethod.valueOf(request.getMethod());
+        if (method == HttpMethod.GET) {
             putRequestParamsToMDC(request);  // Request Param Logging
             putPathVariablesToMDC(handler); // PathVariable Logging
         }
 
-        if(request.getMethod().equals("POST")) {
+        if (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.PATCH || method == HttpMethod.DELETE) {
             putRequestParamsToMDC(request);  // Request Param Logging
             putRequestBodyToMDC(request); // Request Body Logging
             putPathVariablesToMDC(handler); // PathVariable Logging
