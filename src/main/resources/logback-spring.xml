@@ -1,7 +1,7 @@
 <configuration>
-    <!-- application.yml -->
-    <springProperty name="LOG_DIR" source="config.log-dir" defaultValue="logs"/>
-    <springProperty name="MAX_HISTORY" source="config.max-history" defaultValue="30"/>
+    <!-- log-module.yml -->
+    <springProperty name="LOG_DIR" source="log-module.config.log-dir" defaultValue="logs"/>
+    <springProperty name="MAX_HISTORY" source="log-module-config.max-history" defaultValue="30"/>
 
     <!-- Spring Boot Default Config -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
@@ -43,14 +43,31 @@
         <filter class="com.log_module.logging.filter.ErrorLogFilter"/>
     </appender>
 
-    <!-- #Profile은 Root application.yml 에 의존한다. -->
-    <springProfile name="local">
+    <springProfile name="default">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
         </root>
     </springProfile>
 
-    <springProfile name="dev,real">
+    <!-- #Profile은 Root log-module.yml 에 의존한다. -->
+    <springProfile name="local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ERROR_FILE"/>
+            <appender-ref ref="API_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ERROR_FILE"/>
+            <appender-ref ref="API_FILE"/>
+            <appender-ref ref="CONSOLE_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="real, prod">
         <root level="INFO">
             <appender-ref ref="ERROR_FILE"/>
             <appender-ref ref="API_FILE"/>
