@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -28,43 +27,45 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String traceId = UUID.randomUUID().toString(); // 새로운 Trace ID 생성
+        String traceId = UUID.randomUUID().toString();
         MDC.put(MDCKey.TRACE_ID.getKey(), traceId);
-        MDC.put(MDCKey.REQUEST_URI.getKey(), request.getRequestURI());
-        MDC.put(MDCKey.METHOD.getKey(), request.getMethod());
-
-        HttpMethod method = HttpMethod.valueOf(request.getMethod());
-        if (method == HttpMethod.GET) {
-            putRequestParamsToMDC(request);  // Request Param Logging
-            putPathVariablesToMDC(handler); // PathVariable Logging
-        }
-
-        if (method == HttpMethod.POST || method == HttpMethod.PUT || method == HttpMethod.PATCH || method == HttpMethod.DELETE) {
-            putRequestParamsToMDC(request);  // Request Param Logging
-            putRequestBodyToMDC(request); // Request Body Logging
-            putPathVariablesToMDC(handler); // PathVariable Logging
-        }
 
         return true;
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws JsonProcessingException {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
-        String requestURI = MDC.get(MDCKey.REQUEST_URI.getKey());
-        String method = MDC.get(MDCKey.METHOD.getKey());
+        String requestURI = request.getRequestURI();
+        String method = request.getMethod();
 
-        String responseBody = getResponseBody(response);
-        if (responseBody != null) {
-            log.info("Response Status: [{}] TraceId: [{}] Method: [{}] requestURI: [{}] Body: [{}]", response.getStatus(), traceId, method, requestURI, responseBody);
+        if (response.getStatus() == HttpServletResponse.SC_OK) {
+            String responseBody = extractResponseBody(response);
+            log.info("Response Status: {} TraceId: {} Method: {} requestURI: {} responseBody:{}", response.getStatus(), traceId, method, requestURI, responseBody);
         } else {
-            log.info("Response Status: [{}] TraceId: [{}] Method: [{}] requestURI: [{}]", response.getStatus(), traceId, method, requestURI);
+            String requestParams = extractRequestParams(request);
+            String pathVariables = extractPathVariables(handler);
+            String requestBody = extractRequestBody(request);
+
+            String logMessage = String.format("""
+                    Request Info:
+                    ------------------------------
+                    TraceId       : %s
+                    RequestUri    : %s
+                    Method        : %s
+                    RequestParams : %s
+                    RequestBody   : %s
+                    PathVariables : %s
+                    ------------------------------
+                    """, traceId, requestURI, method, requestParams, requestBody, pathVariables);
+
+            log.error(logMessage);
         }
 
         MDC.clear();
     }
 
-    private String getResponseBody(HttpServletResponse response) {
+    private String extractResponseBody(HttpServletResponse response) {
         if (response instanceof CustomHttpResponseWrapper responseWrapper) {
             byte[] responseData = responseWrapper.getResponseData();
             if (responseData != null && responseData.length > 0) {
@@ -92,42 +93,41 @@ public class LoggingInterceptor implements HandlerInterceptor {
         return input;
     }
 
-    private void putRequestParamsToMDC(HttpServletRequest request) {
+    private String extractRequestParams(HttpServletRequest request) {
+        Map<String, String> paramMap = new HashMap<>();
         Enumeration<String> parameterNames = request.getParameterNames();
-        if (parameterNames.hasMoreElements()) {
-            Map<String, String> paramMap = new HashMap<>();
 
-            while (parameterNames.hasMoreElements()) {
-                String paramName = parameterNames.nextElement();
-                paramMap.put(paramName, request.getParameter(paramName));
-            }
-
-            MDC.put(MDCKey.REQUEST_PARAMS.getKey(), paramMap.toString());
+        while (parameterNames.hasMoreElements()) {
+            String paramName = parameterNames.nextElement();
+            paramMap.put(paramName, request.getParameter(paramName));
         }
+
+        return paramMap.isEmpty() ? null : paramMap.toString();
     }
 
-    private void putRequestBodyToMDC(HttpServletRequest request) {
+    private String extractRequestBody(HttpServletRequest request) {
         if (request instanceof CustomHttpRequestWrapper requestWrapper) {
             String requestBody = new String(requestWrapper.getRequestBody()).replaceAll("\\s+", "");
 
-            if (!requestBody.isEmpty()) {
-                MDC.put(MDCKey.REQUEST_BODY.getKey(), requestBody);
-            }
+            return requestBody.isEmpty() ? null : requestBody;
         }
+
+        return null;
     }
 
-    private void putPathVariablesToMDC(Object handler) {
+
+    private String extractPathVariables(Object handler) {
         if (handler instanceof HandlerMethod) {
-            ServletRequestAttributes attributes =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
             if (attributes != null) {
                 HttpServletRequest currentRequest = attributes.getRequest();
                 Map<String, String> pathVariables = (Map<String, String>) currentRequest.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 
-                if (pathVariables != null && !pathVariables.isEmpty()) {
-                    MDC.put(MDCKey.PATH_VARIABLES.getKey(), pathVariables.toString());
-                }
+                return (pathVariables == null || pathVariables.isEmpty()) ? null : pathVariables.toString();
             }
         }
+
+        return null;
     }
 }

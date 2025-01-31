@@ -15,10 +15,9 @@ public class ApiLogFilter extends Filter<LoggingEvent> {
     public FilterReply decide(LoggingEvent event) {
         Level level = event.getLevel();
         String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
-        String requestURI = MDC.get(MDCKey.REQUEST_URI.getKey());
-        String method = MDC.get(MDCKey.METHOD.getKey());
+        String loggerName = event.getLoggerName();
 
-        if (Level.INFO.equals(level) && traceId != null && requestURI != null && method != null) {
+        if (Level.INFO.equals(level) && traceId != null && loggerName.contains("LoggingInterceptor")) {
             return FilterReply.ACCEPT;
         }
 
