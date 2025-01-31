@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -24,6 +25,10 @@ import java.util.UUID;
 @Slf4j
 @Component
 public class LoggingInterceptor implements HandlerInterceptor {
+
+    // Root Project .yml value
+    @Value("${log-module.config.response-length-limit:200}")
+    private int responseLengthLimit;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -76,9 +81,9 @@ public class LoggingInterceptor implements HandlerInterceptor {
                     String formattedResponse = mapper.writeValueAsString(json);
 
                     // 글자수 제한 처리
-                    return truncateIfExceedsLimit(formattedResponse, 200);
+                    return truncateIfExceedsLimit(formattedResponse);
                 } catch (JsonProcessingException e) {
-                    return truncateIfExceedsLimit(responseString, 200);
+                    return truncateIfExceedsLimit(responseString);
                 }
             }
         }
@@ -86,10 +91,10 @@ public class LoggingInterceptor implements HandlerInterceptor {
         return null;
     }
 
-    private String truncateIfExceedsLimit(String input, int limit) {
-        if (input.length() > limit) {
-            return input.substring(0, limit) + "...";
-        }
+    private String truncateIfExceedsLimit(String input) {
+        if (input.length() > responseLengthLimit)
+            return input.substring(0, responseLengthLimit) + "...";
+
         return input;
     }
 
