@@ -29,6 +29,8 @@ public class LoggingInterceptor implements HandlerInterceptor {
     // Root Project .yml value
     @Value("${log-module.config.response-length-limit:200}")
     private int responseLengthLimit;
+    @Value("${log-module.config.active:true}")
+    private boolean isActive;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -40,33 +42,34 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
-        String requestURI = request.getRequestURI();
-        String method = request.getMethod();
+        if(isActive) {
+            String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
+            String requestURI = request.getRequestURI();
+            String method = request.getMethod();
 
-        if (response.getStatus() == HttpServletResponse.SC_OK) {
-            String responseBody = extractResponseBody(response);
-            log.info("Response Status: {} TraceId: {} Method: {} requestURI: {} responseBody:{}", response.getStatus(), traceId, method, requestURI, responseBody);
-        } else {
-            String requestParams = extractRequestParams(request);
-            String pathVariables = extractPathVariables(handler);
-            String requestBody = extractRequestBody(request);
+            if (response.getStatus() == HttpServletResponse.SC_OK) {
+                String responseBody = extractResponseBody(response);
+                log.info("Response Status: {} TraceId: {} Method: {} requestURI: {} responseBody:{}", response.getStatus(), traceId, method, requestURI, responseBody);
+            } else {
+                String requestParams = extractRequestParams(request);
+                String pathVariables = extractPathVariables(handler);
+                String requestBody = extractRequestBody(request);
 
-            String logMessage = String.format("""
-                    Request Info:
-                    ------------------------------
-                    TraceId       : %s
-                    RequestUri    : %s
-                    Method        : %s
-                    RequestParams : %s
-                    RequestBody   : %s
-                    PathVariables : %s
-                    ------------------------------
-                    """, traceId, requestURI, method, requestParams, requestBody, pathVariables);
+                String logMessage = String.format("""
+                        Request Info:
+                        ------------------------------
+                        TraceId       : %s
+                        RequestUri    : %s
+                        Method        : %s
+                        RequestParams : %s
+                        RequestBody   : %s
+                        PathVariables : %s
+                        ------------------------------
+                        """, traceId, requestURI, method, requestParams, requestBody, pathVariables);
 
-            log.error(logMessage);
+                log.error(logMessage);
+            }
         }
-
         MDC.clear();
     }
 
