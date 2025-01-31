@@ -43,6 +43,12 @@
         <filter class="com.log_module.logging.filter.ErrorLogFilter"/>
     </appender>
 
+    <springProfile name="default">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
     <!-- #Profile은 Root log-module.yml 에 의존한다. -->
     <springProfile name="local">
         <root level="INFO">
