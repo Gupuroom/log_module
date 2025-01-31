@@ -42,12 +42,16 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+        if (request.getRequestURI().equals("/error")) {
+            return; // /error 요청은 무시
+        }
+
         if(isActive) {
             String traceId = MDC.get(MDCKey.TRACE_ID.getKey());
             String requestURI = request.getRequestURI();
             String method = request.getMethod();
 
-            if (response.getStatus() == HttpServletResponse.SC_OK) {
+            if (response.getStatus() == HttpServletResponse.SC_OK && ex == null) {
                 String responseBody = extractResponseBody(response);
                 log.info("Response Status: {} TraceId: {} Method: {} requestURI: {} responseBody:{}", response.getStatus(), traceId, method, requestURI, responseBody);
             } else {
