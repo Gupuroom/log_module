@@ -18,7 +18,7 @@ Spring Boot 3 ⬆️, Java 17 ⬆️
 # 📑 목차
 
 - [1️⃣ 설치 및 적용](#1️⃣-설치-및-적용)
-- [2️⃣ 환경 설정](#2️⃣-환경-설정)
+- [2️⃣ 로그 설정](#2️⃣-로그-설정)
 - [3️⃣ 패키지 구조](#3️⃣-패키지-구조)
 - [4️⃣ 특징](#4️⃣-특징)
 
@@ -27,8 +27,9 @@ Spring Boot 3 ⬆️, Java 17 ⬆️
 # 1️⃣ 설치 및 적용
 
 ### 1. 서브모듈 설정
-서브모듈은 다른 Git 저장소를 현재 프로젝트에 종속적으로 포함시키는 방법입니다.  
-**`log_module`**을 서브모듈로 설정하려면 아래 과정을 따릅니다.
+>서브모듈은 다른 Git 저장소를 현재 프로젝트에 종속적으로 포함시키는 방법입니다.
+>
+`log_module`을 서브모듈로 설정하려면 아래 과정을 따릅니다.
 
 ```bash
 git submodule add https://github.com/Gupuroom/log_module.git log_module
@@ -38,6 +39,7 @@ git submodule update
 
 >💡 참고:
 다른 개발자가 이 프로젝트를 클론하면, 서브모듈 데이터가 포함되지 않을 수 있으니 아래 명령어를 실행해야 합니다.
+
 ```bash
 git clone <repository_url> git submodule update --init --recursive
 ```
@@ -54,7 +56,7 @@ log_module을 프로젝트에 포함:
 include ':log_module'
 ```
 
-#### Root 프로젝트 build.gradle 설정 추가
+#### 2. Root 프로젝트 build.gradle 설정 추가
 ```gradle
 allprojects {
     repositories {
@@ -76,12 +78,12 @@ subprojects {
 
 ```
 
-#### @SpringBootApplication 설정
+#### 3. @SpringBootApplication 설정
 멀티모듈 프로젝트에서는 @SpringBootApplication에서 각 모듈의 패키지를 스캔해야 합니다.
 
 루트 프로젝트의 @SpringBootApplication을 아래와 같이 scanBasePackages를 정합니다:
 ```java
-@SpringBootApplication(scanBasePackages = {"com.example", "com.log_module"})
+@SpringBootApplication(scanBasePackages = {"com.example [본인 프로젝트 경로]", "com.log_module"})
 public class DemoApplication {
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
@@ -90,25 +92,78 @@ public class DemoApplication {
 
 ---
 
-# 2️⃣ 환경 설정
+# 2️⃣ 로그 설정
 
 ### application.yml 설정
-- 로그 파일 경로 및 보관일 설정.
+이 모듈은 로깅 관련 설정을 YAML 파일을 통해 간편하게 구성할 수 있도록 지원합니다.
+
+프로젝트의 루트 application.yml 파일에서 아래 설정값을 지정하여 로깅 동작을 제어할 수 있습니다.
+
+값을 설정하지 않을 경우, **아래 값(기본값)**으로 동작합니다.
+
 ```yaml
-config:
-  log-dir: logs   # 로그 파일 저장 경로
-  max-history: 30  # 로그 보관일 (기본 30일)
+log-module:
+  config:
+    active: true # 동작 여부
+    log-dir: logs # 로그 파일 저장 경로
+    max-history: 30 # 로그 파일 저장 기한
+    response-length-limit: 200 # ResponseBody 최대 길이
 ```
 
 ### Spring Profiles 설정
 
-Root 프로젝트에서 사용할 환경을 지정해야 합니다. 예를 들어 local, dev, real 환경을 설정하려면 아래와 같이 활성화할 수 있습니다.
+이 모듈은 `Spring Profiles`를 통해 로깅 동작을 환경별로 제어할 수 있습니다.
 
-**지정안 할 시 로그가 호출되지 않습니다.**
+Root 프로젝트의 `application.yml`에서 사용할 환경을 지정해야 하며, 
+
+#### 1. profile 활성화 방법
+Root 프로젝트의 application.yml에서 사용할 환경을 아래와 같이 지정합니다.
 ```yaml
 spring:
   profiles:
-    active: local or dev or real  # 사용할 환경 설정
+    active: local  # local, dev, real or prod 중 선택
+```
+- 🔥지정하지 않을 경우: 기본적으로 콘솔 로깅만 동작합니다.
+- 지정할 수 있는 프로필: local, dev, real (또는 prod)
+
+#### 2. profile 별 로깅 동작
+각 프로필에 따라 다음과 같이 로깅이 동작합니다.
+
+상세 설정은 `logback-spring.xml`에서 확인할 수 있습니다. 
+
+**local**: [ 
+콘솔 로깅: ✅
+에러 로그 파일: ✅
+API 로그 파일: ✅
+]
+
+**dev**: [ 
+콘솔 로깅: ✅
+에러 로그 파일: ✅
+API 로그 파일: ✅
+콘솔 로그 파일: ✅
+]
+
+**real OR prod** : [
+에러 로그 파일: ✅
+API 로그 파일: ✅
+콘솔 로그 파일: ✅
+]
+
+### 3. 예시 설정
+
+``` yaml
+# Root 프로젝트의 application.yml
+spring:
+  profiles:
+    active: dev  # dev 환경 활성화
+
+log-module:
+  config:
+    active: true
+    log-dir: logs
+    max-history: 30
+    response-length-limit: 200
 ```
 
 ---
@@ -121,31 +176,21 @@ spring:
 com.log_module
 │
 ├── config
-│   └── WebConfig                # Spring Boot 설정 클래스
-│
-├── exception
-│   ├── CommonException          # 공통 예외 처리 클래스
-│   ├── CommonExceptionCode      # 예외 코드 정의
-│   ├── CommonExceptionHandler   # 예외 처리 핸들러
-│   └── CommonExceptionResponse  # 예외 응답 클래스
+│   └── LoggingConfig                # Spring Boot 설정 클래스
 │
 ├── logging
 │   ├── filter
-│   │   ├── ApiLogFilter         # API 로그 필터
-│   │   └── ErrorLogFilter       # ERROR 로그 필터
+│   │   ├── ApiLogFilter          # API 로그 필터
+│   │   ├── ErrorLogFilter        # ERROR 로그 필터
+│   │   ├── RequestWrapperFilter  # Request Wrapper 필터
+│   │   └── ResponseWrapperFilter # Response Wrapper 필터
 │   ├── interceptor
-│   │   └── LogInterceptor      # 로그 인터셉터
+│   │   └── LoggingInterceptor      # 로그 인터셉터
 │   ├── type
 │   │   └── MDCKey              # MDC Key 정의
 │   └── wrapper
 │       └── CustomHttpRequestWrapper  # 커스텀 HTTP 요청 래퍼
 │       └── CustomHttpResponseWrapper # 커스텀 HTTP 응답 래퍼
-│
-└── test
-    ├── controller
-    │   └── TestController       # 테스트용 컨트롤러
-    └── type
-        └── TestExceptionCode    # 테스트용 예외 코드
 ```
 
 ---
@@ -177,7 +222,7 @@ com.log_module
 - 에러 발생 시 `traceId`를 통해 연관된 로그 추적
 
 ### 6. **테스트 지원**
-- 기본적으로 제공되는 테스트 컨트롤러와 예외 코드를 통해, 모듈 테스트 및 검증이 용이
+- 기본적으로 제공되는 TestController 를 통해, 모듈 테스트 및 검증이 용이
 
 
 이 모듈은 단순히 로그를 기록하는 기능뿐 아니라, 개발 및 운영 환경에서 로그 관리를 체계적으로 할 수 있도록 설계되었습니다.
